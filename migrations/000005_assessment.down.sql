@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS grade_entries CASCADE;
+DROP FUNCTION IF EXISTS grade_entries_check_score();
+DROP TABLE IF EXISTS grade_components CASCADE;
+DROP TABLE IF EXISTS exam_violations CASCADE;
+DROP TABLE IF EXISTS quiz_attempts CASCADE;
+DROP TABLE IF EXISTS quiz_questions CASCADE;
+DROP TABLE IF EXISTS quizzes CASCADE;
+DROP TABLE IF EXISTS exam_enrollments CASCADE;
+DROP TABLE IF EXISTS exams CASCADE;
+DROP FUNCTION IF EXISTS exams_block_delete_with_attempts();
+DROP TABLE IF EXISTS question_attachments CASCADE;
+DROP TABLE IF EXISTS question_answers CASCADE;
+DROP TABLE IF EXISTS questions CASCADE;
+DROP TABLE IF EXISTS question_groups CASCADE;
+DROP TABLE IF EXISTS question_banks CASCADE;

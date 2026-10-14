@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS career_recommendations CASCADE;
+DROP TABLE IF EXISTS user_cvs CASCADE;
+DROP TABLE IF EXISTS job_postings CASCADE;
+DROP VIEW IF EXISTS user_point_balances;
+DROP TABLE IF EXISTS point_transactions CASCADE;
+DROP FUNCTION IF EXISTS point_transactions_append_only();
+DROP TABLE IF EXISTS tuitions CASCADE;
+DROP TABLE IF EXISTS user_certificates CASCADE;
+DROP TABLE IF EXISTS user_career_paths CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS user_vouchers CASCADE;
+DROP TABLE IF EXISTS vouchers CASCADE;
+DROP TABLE IF EXISTS career_path_courses CASCADE;
+DROP TABLE IF EXISTS career_paths CASCADE;
+DROP TABLE IF EXISTS certificate_templates CASCADE;
