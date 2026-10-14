@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/app"
+	"github.com/Chilly913/PTIT_ERIPT_API/internal/auth"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/config"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/logx"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/worker"
@@ -43,6 +45,14 @@ func run() error {
 	}()
 
 	r := worker.NewRunner(log)
+	tokens := auth.NewTokenService(a.DB, auth.TokenOptions{})
+	r.Add(worker.Job{Name: "purge-expired-tokens", Interval: time.Hour, Fn: func(ctx context.Context) error {
+		n, err := tokens.PurgeExpired(ctx, time.Now().UTC().Add(-24*time.Hour))
+		if err == nil && n > 0 {
+			log.Info("purged expired tokens", "count", n)
+		}
+		return err
+	}})
 	// TODO(phase 5-7): register jobs, e.g.
 	//   r.Add(worker.Job{Name: "flush-ai-request-logs", Interval: time.Minute, Fn: ...})
 	return r.Run(ctx)
