@@ -1,65 +1,92 @@
-version: "3.9"
+# Local stack: PostgreSQL 17, Redis, MinIO, one-shot migrations, API, worker.
+#   docker compose up --build
+# Secrets below are for local development only.
+
+x-app-env: &app-env
+  APP_ENV: development
+  APP_URL: http://localhost:8080
+  FRONTEND_URL: http://localhost:3000
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_DATABASE: eript
+  DB_USERNAME: eript
+  DB_PASSWORD: eript
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  S3_ENDPOINT: http://minio:9000
+  S3_ACCESS_KEY: minioadmin
+  S3_SECRET_KEY: minioadmin123
+  S3_BUCKET: lms-videos
+  S3_USE_PATH_STYLE: "true"
+  S3_PUBLIC_URL: http://localhost:9000/lms-videos
+  AI_SERVICE_URL: http://host.docker.internal:8001
+  CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:3000,http://127.0.0.1:3000
+  TRUSTED_PROXIES: "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 services:
-  mysql:
-    image: mysql:8.0
+  postgres:
+    image: postgres:17-alpine
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: lms_db
-      MYSQL_USER: lms_user
-      MYSQL_PASSWORD: lms_password
-    ports: ["3306:3306"]
-    volumes: [mysql_data:/var/lib/mysql]
+      POSTGRES_DB: eript
+      POSTGRES_USER: eript
+      POSTGRES_PASSWORD: eript
+    ports: ["5432:5432"]
+    volumes: [pg_data:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U eript -d eript"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
     volumes: [redis_data:/data]
-
-  mongodb:
-    image: mongo:7
-    ports: ["27017:27017"]
-    volumes: [mongo_data:/data/db]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   minio:
     image: minio/minio:latest
-    ports: ["9000:9000", "9001:9001"]
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
-    command: server /data --console-address ":9001"
+    ports: ["9000:9000", "9001:9001"]
     volumes: [minio_data:/data]
+
+  migrate:
+    build: .
+    entrypoint: ["/cli", "migrate", "up"]
+    environment: *app-env
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
 
   api:
     build: .
+    entrypoint: ["/server"]
     environment:
-      APP_ENV: development
+      <<: *app-env
       PORT: "8080"
-      DB_HOST: mysql
-      DB_PORT: "3306"
-      DB_DATABASE: lms_db
-      DB_USERNAME: lms_user
-      DB_PASSWORD: lms_password
-      JWT_SECRET: change-me-to-a-long-random-string
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      MONGO_URI: mongodb://mongodb:27017/lms_chat
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
-      MINIO_BUCKET: lms-videos
-      AI_SERVICE_URL: http://host.docker.internal:8001
     ports: ["8080:8080"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
     depends_on:
-      mysql: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      minio: { condition: service_started }
+
+  worker:
+    build: .
+    entrypoint: ["/worker"]
+    environment: *app-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
 
 volumes:
-  mysql_data:
+  pg_data:
   redis_data:
-  mongo_data:
   minio_data:

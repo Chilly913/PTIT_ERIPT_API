@@ -7,8 +7,8 @@ bin/
 .env.*
 !.env.example
 # Data / storage
-data/
-storage/
+/data/
+/storage/
 # OS
 .DS_Store
 .idea/
