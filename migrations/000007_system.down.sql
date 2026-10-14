@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS experience_survey_responses CASCADE;
+DROP TABLE IF EXISTS ai_request_logs CASCADE;
+DROP TABLE IF EXISTS ai_settings CASCADE;
+DROP TABLE IF EXISTS site_settings CASCADE;
+DROP TABLE IF EXISTS news_posts CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
