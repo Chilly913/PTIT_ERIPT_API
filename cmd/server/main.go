@@ -12,6 +12,9 @@ import (
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/config"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/logx"
 	authmod "github.com/Chilly913/PTIT_ERIPT_API/internal/modules/auth"
+	"github.com/Chilly913/PTIT_ERIPT_API/internal/modules/catalog"
+	"github.com/Chilly913/PTIT_ERIPT_API/internal/modules/interaction"
+	"github.com/Chilly913/PTIT_ERIPT_API/internal/modules/study"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/rbac"
 	"github.com/Chilly913/PTIT_ERIPT_API/internal/server"
 )
@@ -45,8 +48,13 @@ func run() error {
 
 	// Domain modules are mounted under /api as they are ported (see docs/MIGRATION_PLAN.md).
 	roles := rbac.FromApp(a)
+	authModule := authmod.New(a, roles)
+	tokens := authModule.Tokens()
 	modules := []app.Module{
-		authmod.New(a, roles),
+		authModule,
+		catalog.New(a, roles, tokens),
+		study.New(a, roles, tokens),
+		interaction.New(a, roles, tokens),
 	}
 
 	return server.Run(ctx, a, modules...)
