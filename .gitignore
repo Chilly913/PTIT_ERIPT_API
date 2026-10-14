@@ -1,0 +1,15 @@
+# Binaries
+bin/
+*.exe
+# Vendor (go modules cache not needed; keep go.sum)
+# Env
+.env
+.env.*
+!.env.example
+# Data / storage
+data/
+storage/
+# OS
+.DS_Store
+.idea/
+.vscode/
