@@ -23,6 +23,7 @@ import (
 const (
 	msgRegistered       = "Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản."
 	msgUnverifiedLogin  = "Email của bạn chưa được xác nhận. Chúng tôi đã gửi lại email xác nhận."
+	msgAccountDisabled  = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."
 	msgInvalidLogin     = "Invalid email or password"
 	msgLoginSuccess     = "Login success"
 	msgLogoutSuccess    = "Logout success"
@@ -159,6 +160,11 @@ func (m *Module) login(c *gin.Context) {
 		return
 	}
 	_ = m.limiter.Clear(ctx, "auth.login", throttleKey)
+	// Checked after the password so a locked account is not revealed to guessers.
+	if u.IsDisabled() {
+		httpx.Abort(c, http.StatusForbidden, msgAccountDisabled)
+		return
+	}
 	m.respondWithToken(c, u, roles, msgLoginSuccess)
 }
 

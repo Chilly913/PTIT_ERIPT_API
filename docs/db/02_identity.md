@@ -126,6 +126,6 @@ for audit. Legacy data had 0 users with `google_id`, so migration cost is nil.
 1. `user_type` vs roles: `user_type` only has 4 values and admin-created users (e.g. `finance`, `advisor` role holders) default to `student`. Should Go derive `user_type` from roles, or add `staff` to the CHECK?
 2. API field `role` = "first role" of a multi-role user is non-deterministic in legacy. Proposed priority: admin > academic_manager > instructor > advisor > finance > student. Confirm.
 3. Access/refresh lifetimes (proposed: access 1 h, refresh 30 days sliding). If the team prefers no refresh flow, drop `refresh_tokens` and use long `expires_at` on `access_tokens`.
-4. No account lock/disable column exists in legacy. Add `users.disabled_at` now?
+4. ~~No account lock/disable column exists in legacy.~~ Decided: `users.disabled_at` added. A disabled user cannot log in (403 after the password check) and existing tokens stop working.
 5. `user_assignments` was not in the identity table list given to me — confirm no other domain also creates it.
 6. `000006_commerce_career` comments refer to `users.points_balance`; it is now `user_stats.points_balance`.

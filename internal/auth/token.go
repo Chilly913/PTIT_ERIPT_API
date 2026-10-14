@@ -132,8 +132,8 @@ func needsTouch(lastUsed *time.Time, now time.Time, interval time.Duration) bool
 	return lastUsed == nil || now.Sub(*lastUsed) >= interval
 }
 
-// Verify resolves a plaintext token to its principal. Revoked, expired and
-// soft-deleted-user tokens yield ErrInvalidToken. Expiry slides to now+TTL,
+// Verify resolves a plaintext token to its principal. Revoked, expired,
+// soft-deleted-user and disabled-user tokens yield ErrInvalidToken. Expiry slides to now+TTL,
 // written at most once per TouchInterval.
 func (s *TokenService) Verify(ctx context.Context, plain string) (Principal, error) {
 	if plain == "" || len(plain) > 512 {
@@ -144,7 +144,7 @@ func (s *TokenService) Verify(ctx context.Context, plain string) (Principal, err
 	err := s.db.WithContext(ctx).Raw(`
 SELECT t.id, t.user_id, t.expires_at, t.last_used_at
 FROM access_tokens t
-JOIN users u ON u.id = t.user_id AND u.deleted_at IS NULL
+JOIN users u ON u.id = t.user_id AND u.deleted_at IS NULL AND u.disabled_at IS NULL
 WHERE t.token_hash = ? AND t.revoked_at IS NULL AND t.expires_at > ?
 LIMIT 1`, HashToken(plain), now).Scan(&rows).Error
 	if err != nil {

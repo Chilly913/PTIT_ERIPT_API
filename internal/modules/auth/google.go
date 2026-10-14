@@ -242,6 +242,10 @@ func (m *Module) handleGoogleCallback(c *gin.Context) {
 		httpx.Fail(c, err)
 		return
 	}
+	if user.IsDisabled() {
+		m.googleFail(c, redirect, msgAccountDisabled)
+		return
+	}
 
 	if redirect {
 		var tok auth.IssuedToken

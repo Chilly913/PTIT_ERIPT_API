@@ -465,6 +465,21 @@ func TestSoftDeletedUser(t *testing.T) {
 	e.expect(r, 422, "The email has already been taken.")
 }
 
+func TestDisabledUser(t *testing.T) {
+	e := setup(t, false)
+	email, id := e.registerVerified("dave", "secret1")
+	token := e.login(email, "secret1")
+	e.db.Exec(`UPDATE users SET disabled_at = now() WHERE id = ?`, id)
+
+	e.expect(e.do("GET", "/api/auth/me", token, nil), 401, "Unauthenticated.")
+	// A wrong password does not reveal the lock.
+	e.expect(e.do("POST", "/api/auth/login", "", map[string]any{"email": email, "password": "wrong"}), 401, "Invalid email or password")
+	e.expect(e.do("POST", "/api/auth/login", "", map[string]any{"email": email, "password": "secret1"}), 403, msgAccountDisabled)
+
+	e.db.Exec(`UPDATE users SET disabled_at = NULL WHERE id = ?`, id)
+	e.login(email, "secret1")
+}
+
 func TestTokenSlidingExpiry(t *testing.T) {
 	e := setup(t, false)
 	email, _ := e.registerVerified("dave", "secret1")

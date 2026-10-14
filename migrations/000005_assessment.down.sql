@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS quiz_questions CASCADE;
 DROP TABLE IF EXISTS quizzes CASCADE;
 DROP TABLE IF EXISTS exam_enrollments CASCADE;
 DROP TABLE IF EXISTS exams CASCADE;
+DROP FUNCTION IF EXISTS exams_block_delete_with_attempts();
 DROP TABLE IF EXISTS question_attachments CASCADE;
 DROP TABLE IF EXISTS question_answers CASCADE;
 DROP TABLE IF EXISTS questions CASCADE;

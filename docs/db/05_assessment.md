@@ -106,7 +106,7 @@ Columns not listed map 1:1 with the same name. `created_at`/`updated_at` NULL ->
 | quizzes.* | quizzes.* | `time_limit`, `pass_score` (smallint), `settings` jsonb |
 | quiz_question (table) | quiz_questions | drop `id` |
 | quiz_question.order | quiz_questions.position | — |
-| quiz_question.points int | quiz_questions.points numeric(6,2) | — |
+| quiz_question.points int | quiz_questions.points numeric(6,2) NULL | legacy values were the unused default 10: migrate as NULL unless set on purpose |
 | quiz_attempts.question_ids json | quiz_attempts.question_ids bigint[] | JSON array -> array; NULL -> `'{}'` |
 | quiz_attempts.answers_json json | quiz_attempts.answers jsonb | — |
 | quiz_attempts.answers_data | — | dropped (unused) |
@@ -126,11 +126,11 @@ Columns not listed map 1:1 with the same name. `created_at`/`updated_at` NULL ->
 
 API notes for the Go port: return `question_answers` as relation `answers` with `order` = `position` and `sort_order` = `correct_position ?? position`; pivot `order` = `quiz_questions.position`; attempt `answers_json` / `saved_answers` / `student_answers` = `answers`; violation `snapshot_url` = resolved URL of `snapshot_path`; attachment `file_size` = formatted `file_size_bytes`; exam `proctoring_settings` = `null` if a client still expects the key.
 
-## 4. Open questions
+## 4. Decisions (2026-10-14)
 
-1. **Exam deletion**: deleting an exam cascades to its quiz, attempts and violations (legacy set `quizzes.exam_id` NULL and left orphaned attempts). Should exams with completed attempts be blocked (`RESTRICT` / soft-archive via `status='archived'`) instead?
-2. **Grading weight**: grading uses `questions.default_score`; `quiz_questions.points` (default 10) is stored and returned but ignored. Should the Go port grade with `points`?
-3. **Sum of component weights = 100** per course is not enforced (upsert replaces the whole set; a deferred constraint trigger is possible if wanted).
-4. **`grade_components.max_score > 0`** is stricter than the legacy validation (`min:0`). OK?
-5. **Group/bank consistency**: a question's group should belong to the same bank (0 mismatches). Could be enforced with a composite FK `(question_group_id, question_bank_id)`; left out because `updateGroup` can move a group to another bank. Enforce?
-6. Should `ordering` grading be implemented (uses `correct_position`)? Currently no such questions exist.
+1. **Exam deletion**: blocked when the exam has attempts (trigger `trg_exams_block_delete`; the API returns 422 first). Archive with `status='archived'` instead. Exams without attempts still cascade to their quiz.
+2. **Grading weight**: grade with `quiz_questions.points`; NULL falls back to `questions.default_score`. `points` is now nullable without default.
+3. **Sum of component weights = 100** per course: enforced by the API on upsert (the whole set is replaced at once).
+4. **`grade_components.max_score > 0`**: kept.
+5. **Group/bank consistency**: composite FK `fk_questions_question_group_id_question_bank_id` (`ON UPDATE CASCADE`, so moving a group to another bank moves its questions).
+6. **`ordering` grading**: implemented in the Go port — full marks only when the whole order matches `correct_position`.

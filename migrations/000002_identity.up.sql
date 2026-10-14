@@ -109,6 +109,8 @@ CREATE TABLE users (
     -- soft delete: deleted users cannot log in and are hidden from listings; history rows keep their FK.
     -- email / codes stay reserved after deletion (unique constraints are not partial).
     deleted_at              timestamptz,
+    -- temporary lock set by an admin: cannot log in, existing tokens stop working, still listed.
+    disabled_at             timestamptz,
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT uq_users_student_code UNIQUE (student_code),

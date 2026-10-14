@@ -45,10 +45,14 @@ type User struct {
 	CreatedAt             time.Time      `gorm:"column:created_at"`
 	UpdatedAt             time.Time      `gorm:"column:updated_at"`
 	DeletedAt             gorm.DeletedAt `gorm:"column:deleted_at"`
+	DisabledAt            *time.Time     `gorm:"column:disabled_at"`
 }
 
 // TableName implements gorm's tabler.
 func (User) TableName() string { return "users" }
+
+// IsDisabled reports whether an admin has locked the account.
+func (u *User) IsDisabled() bool { return u.DisabledAt != nil }
 
 // HasVerifiedEmail mirrors MustVerifyEmail::hasVerifiedEmail.
 func (u *User) HasVerifiedEmail() bool { return u.EmailVerifiedAt != nil }
