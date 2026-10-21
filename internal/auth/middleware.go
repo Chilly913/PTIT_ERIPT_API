@@ -43,3 +43,23 @@ func (s *TokenService) Optional() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// RequireRole lets only users holding one of the allowed roles through (403 otherwise). Use after Required().
+func RequireRole(roles RoleService, allowed ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		have, _, err := roles.UserRolesPermissions(c.Request.Context(), UserID(c))
+		if err != nil {
+			httpx.Fail(c, err)
+			return
+		}
+		for _, r := range have {
+			for _, a := range allowed {
+				if r == a {
+					c.Next()
+					return
+				}
+			}
+		}
+		httpx.Forbidden(c, "")
+	}
+}
