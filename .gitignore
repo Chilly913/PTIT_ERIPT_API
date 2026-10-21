@@ -13,3 +13,6 @@ bin/
 .DS_Store
 .idea/
 .vscode/
+
+# user uploads (images, SCORM packages, private submissions) belong to the running site, not to git
+/uploads/

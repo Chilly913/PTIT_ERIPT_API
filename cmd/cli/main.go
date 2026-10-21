@@ -32,6 +32,9 @@ commands:
   migrate steps <n>          apply (n>0) or roll back (n<0) n migrations
   migrate version            print the current schema version
   migrate force <version>    set the version without running SQL (fix dirty state)
+  seed users                 create/refresh demo accounts, one per role (dev only)
+  seed content               upsert Viện Kinh tế Bưu điện news, partners and site settings (dev only)
+  seed academic              upsert sample program types, programs, years, terms, cohorts and classes (dev only)
 `
 
 func main() {
@@ -56,6 +59,10 @@ func run(args []string) error {
 	switch args[0] {
 	case "migrate":
 		return migrateCmd(args[1:], *dir)
+	case "seed":
+		return seedCmd(args[1:])
+	case "admin":
+		return adminCmd(args[1:])
 	default:
 		fset.Usage()
 		return fmt.Errorf("unknown command %q", args[0])
@@ -66,6 +73,7 @@ func migrateCmd(args []string, dir string) error {
 	if len(args) == 0 {
 		return errors.New("migrate: missing subcommand (up|down|steps|version|force)")
 	}
+	_, _ = config.LoadDotEnv(".env") // local development: variables already set win
 	cfg, err := config.Load()
 	if err != nil {
 		return err

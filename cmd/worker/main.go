@@ -25,6 +25,7 @@ func main() {
 }
 
 func run() error {
+	_, _ = config.LoadDotEnv(".env") // local development: variables already set win
 	cfg, err := config.Load()
 	if err != nil {
 		return err
